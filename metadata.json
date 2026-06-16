@@ -1,0 +1,6 @@
+{
+  "name": "Bolsistas CNPq Dashboard",
+  "description": "Painel interativo para visualizar dados sobre pesquisadores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
