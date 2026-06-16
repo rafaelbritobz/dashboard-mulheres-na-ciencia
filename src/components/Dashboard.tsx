@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import scientistIcon from '../female-scientist.png';
 import { parseData, Researcher, Filters } from '../lib/data-utils';
 import { 
   BarChart2, Scissors, Network, Building2, Crown, 
@@ -88,8 +89,12 @@ export default function Dashboard() {
       <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${isMobileFiltersOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-xl md:shadow-none`}>
         <div className="p-5 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-900 rounded flex items-center justify-center text-white font-bold tracking-tighter">PQ</div>
-            <h1 className="font-bold text-slate-800 tracking-tight leading-tight">CNPq<br/><span className="text-xs text-slate-500 font-medium tracking-normal">Analytics Interativo</span></h1>
+            <img src={scientistIcon} alt="Cientista" className="w-10 h-10 rounded-full border border-slate-200 shadow-sm bg-teal-50 object-cover" />
+            <h1 className="font-bold text-slate-800 text-sm tracking-tight leading-tight">
+              Mulheres na Ciência
+              <br />
+              <span className="text-[11px] text-slate-400 font-semibold tracking-normal uppercase">Dashboard</span>
+            </h1>
           </div>
           <button className="md:hidden text-slate-500 hover:text-slate-800" onClick={() => setIsMobileFiltersOpen(false)}>
             <X className="w-5 h-5" />
