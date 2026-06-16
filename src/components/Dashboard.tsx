@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import scientistIcon from '../female-scientist.png';
+import scientistIcon from '../female-scientist.avif';
 import { parseData, Researcher, Filters } from '../lib/data-utils';
 import { 
   BarChart2, Scissors, Network, Building2, Crown, 
