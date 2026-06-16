@@ -34,7 +34,7 @@ export function TabDisciplinas({ data }: { data: Researcher[] }) {
   }, [areaStats]);
 
   const top10Men = useMemo(() => {
-    return [...areaStats].sort((a, b) => a.pctMulheres - b.pctMulheres).slice(0, 10);
+    return [...areaStats].sort((a, b) => b.pctHomens - a.pctHomens).slice(0, 10);
   }, [areaStats]);
 
   return (
@@ -95,11 +95,11 @@ export function TabDisciplinas({ data }: { data: Researcher[] }) {
                 <YAxis type="category" dataKey="name" width={160} axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 11}} />
                 <Tooltip 
                   cursor={{fill: '#f8fafc'}}
-                   formatter={(val: number) => [`${Math.round(val)}%`, 'Mulheres']}
+                  formatter={(val: number) => [`${Math.round(val)}%`, 'Homens']}
                 />
-                <Bar dataKey="pctMulheres" fill={COLORS.menLight} radius={[0, 4, 4, 0]}>
+                <Bar dataKey="pctHomens" fill={COLORS.men} radius={[0, 4, 4, 0]}>
                   {top10Men.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS.menLight} />
+                    <Cell key={`cell-${index}`} fill={COLORS.men} />
                   ))}
                 </Bar>
               </BarChart>

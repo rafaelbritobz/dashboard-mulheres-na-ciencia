@@ -66,7 +66,7 @@ export function BrazilMap({ data }: { data: any[] }) {
         <ComposableMap
           projection="geoMercator"
           projectionConfig={{
-            scale: 950,
+            scale: 840,
             center: [-54, -15]
           }}
           style={{ width: "100%", height: "100%" }}

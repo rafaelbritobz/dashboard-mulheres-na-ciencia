@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Researcher, COLORS } from '../../lib/data-utils';
-import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Treemap, Cell } from 'recharts';
+import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Cell } from 'recharts';
 
 export function TabElite({ data }: { data: Researcher[] }) {
   const eliteData = useMemo(() => {
@@ -39,27 +39,54 @@ export function TabElite({ data }: { data: Researcher[] }) {
       return {
         name: a.name,
         Bolsas: a.count,
-        Acumulado: (acumulado / total) * 100
+        Acumulado: parseFloat(((acumulado / total) * 100).toFixed(1))
       };
     });
   }, [eliteData]);
 
-  const treemapData = useMemo(() => {
-    const macroAreas = eliteData.reduce((acc, d) => {
-      if (!acc[d.macroArea]) acc[d.macroArea] = { name: d.macroArea, children: [] };
-      const areaNode = acc[d.macroArea].children.find((c: any) => c.name === d.area);
-      if (areaNode) {
-        areaNode.size += 1;
-      } else {
-        acc[d.macroArea].children.push({ name: d.area, size: 1 });
+  const groupedBarData = useMemo(() => {
+    const groups: Record<string, Record<string, { name: string, mulheres: number, homens: number, total: number }>> = {};
+    
+    eliteData.forEach(d => {
+      const ma = d.macroArea || 'Outras';
+      const area = d.area || 'Outras';
+      if (!groups[ma]) groups[ma] = {};
+      if (!groups[ma][area]) {
+        groups[ma][area] = { name: area, mulheres: 0, homens: 0, total: 0 };
       }
-      return acc;
-    }, {} as Record<string, any>);
+      groups[ma][area].total++;
+      if (d.gender === 'Mulher') groups[ma][area].mulheres++;
+      else if (d.gender === 'Homem') groups[ma][area].homens++;
+    });
 
-    return Object.values(macroAreas);
+    const result: Array<{
+      macroArea: string;
+      areas: Array<{
+        name: string;
+        Mulheres: number;
+        Homens: number;
+        total: number;
+      }>;
+    }> = [];
+
+    Object.entries(groups).forEach(([maName, areasObj]) => {
+      const sortedAreas = Object.values(areasObj)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5)
+        .map(a => ({
+          name: a.name,
+          Mulheres: a.mulheres,
+          Homens: a.homens,
+          total: a.total
+        }));
+      result.push({
+        macroArea: maName,
+        areas: sortedAreas
+      });
+    });
+
+    return result;
   }, [eliteData]);
-
-  const TREEMAP_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ec4899'];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
@@ -95,6 +122,10 @@ export function TabElite({ data }: { data: Researcher[] }) {
                  <YAxis yAxisId="right" orientation="right" unit="%" tick={{fill: '#64748b'}} axisLine={false} tickLine={false} domain={[0, 100]} />
                  <Tooltip 
                    contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                   formatter={(value: any, name: string) => {
+                     if (name === 'Acumulado') return [`${Number(value).toFixed(1)}%`, 'Acumulado'];
+                     return [value.toLocaleString('pt-BR'), name];
+                   }}
                  />
                  <Bar yAxisId="left" dataKey="Bolsas" fill="#334155" radius={[4, 4, 0, 0]} maxBarSize={40} />
                  <Line yAxisId="right" type="monotone" dataKey="Acumulado" stroke="#ec4899" strokeWidth={3} dot={{r: 4}} />
@@ -104,20 +135,39 @@ export function TabElite({ data }: { data: Researcher[] }) {
       </div>
 
       <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm flex flex-col">
-          <h3 className="text-base font-bold text-slate-800 mb-1">Divisão da Elite por Campos do Conhecimento</h3>
-          <p className="text-sm text-slate-500 mb-6">Áreas de estudo aninhadas dentro de suas Macroáreas. Tamanho reflete o número de bolsas.</p>
-          <div className="w-full h-[500px]">
-             <ResponsiveContainer width="100%" height="100%">
-                <Treemap
-                  data={treemapData}
-                  dataKey="size"
-                  aspectRatio={4 / 3}
-                  stroke="#fff"
-                  isAnimationActive={false}
-                >
-                  <Tooltip contentStyle={{borderRadius: '8px'}} />
-                </Treemap>
-             </ResponsiveContainer>
+          <h3 className="text-base font-bold text-slate-800 mb-1">Distribuição da Elite por Campos do Conhecimento</h3>
+          <p className="text-sm text-slate-500 mb-6">Top 5 disciplinas com mais bolsas de elite em cada Macroárea, destacando a disparidade de gênero.</p>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {groupedBarData.map(group => (
+              <div key={group.macroArea} className="flex flex-col min-h-[300px] border border-slate-100 rounded-lg p-4 bg-slate-50/50">
+                <h4 className="text-sm font-bold text-slate-700 mb-4 border-b border-slate-200/50 pb-2">{group.macroArea}</h4>
+                <div className="flex-1 w-full h-[240px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={group.areas} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                      <XAxis type="number" hide />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        width={110} 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{fill: '#475569', fontSize: 10, fontWeight: 'medium'}} 
+                        tickFormatter={(name: string) => name.length > 18 ? `${name.substring(0, 15)}...` : name}
+                      />
+                      <Tooltip 
+                        cursor={{fill: '#f1f5f9'}}
+                        contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                        formatter={(val: number, name: string) => [`${val} bolsas`, name]}
+                      />
+                      <Bar dataKey="Homens" fill={COLORS.men} stackId="a" />
+                      <Bar dataKey="Mulheres" fill={COLORS.women} stackId="a" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            ))}
           </div>
       </div>
 

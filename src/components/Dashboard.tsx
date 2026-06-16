@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { parseData, Researcher, Filters } from '../lib/data-utils';
 import { 
-  BarChart2, Scissors, Network, Building2, Crown, Upload, 
+  BarChart2, Scissors, Network, Building2, Crown, 
   Filter, X
 } from 'lucide-react';
 
@@ -17,7 +17,6 @@ export default function Dashboard() {
   const [data, setData] = useState<Researcher[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [filters, setFilters] = useState<Filters>({
     genders: ['Mulher', 'Homem'],
@@ -37,18 +36,6 @@ export default function Dashboard() {
     });
   }, []);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      parseData(file).then(parsedData => {
-        setData(parsedData);
-        setFilters(f => ({
-          ...f,
-          levels: Array.from(new Set(parsedData.map((d: any) => d.level)))
-        }));
-      });
-    }
-  };
 
   // Extract unique options for filters
   const filterOptions = useMemo(() => {
@@ -209,14 +196,6 @@ export default function Dashboard() {
              </span>
           </div>
 
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md transition-colors"
-          >
-            <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">Importar</span>
-          </button>
-          <input type="file" accept=".csv, .xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-8">

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Researcher, COLORS } from '../../lib/data-utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 
 export function TabInstituicoes({ data }: { data: Researcher[] }) {
@@ -72,7 +72,16 @@ export function TabInstituicoes({ data }: { data: Researcher[] }) {
   const metrics = useMemo(() => {
     // Only consider larger institutions for parity metrics
     const largeInsts = instStats.filter(i => i.total > 50);
-    if (!largeInsts.length) return { bestParity: 'N/A', worstGap: 'N/A', topUf: 'N/A' };
+    if (!largeInsts.length) return { 
+      bestParity: 'N/A', 
+      bestParityMenPct: 0,
+      bestParityWomenPct: 0,
+      worstGap: 'N/A', 
+      worstGapMenPct: 0,
+      worstGapWomenPct: 0,
+      topUf: 'N/A',
+      topUfCount: 0
+    };
     
     // Best parity: closest to 50%
     const best = [...largeInsts].sort((a,b) => Math.abs(a.pctMulheres - 50) - Math.abs(b.pctMulheres - 50))[0];
@@ -87,7 +96,11 @@ export function TabInstituicoes({ data }: { data: Researcher[] }) {
 
     return { 
       bestParity: best.name, 
+      bestParityMenPct: best.pctHomens,
+      bestParityWomenPct: best.pctMulheres,
       worstGap: worst.name, 
+      worstGapMenPct: worst.pctHomens,
+      worstGapWomenPct: worst.pctMulheres,
       topUf: topUf[0],
       topUfCount: topUf[1]
     };
@@ -128,19 +141,70 @@ export function TabInstituicoes({ data }: { data: Researcher[] }) {
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Melhor Paridade (&gt;50 vols)</p>
-          <p className="text-xl font-bold text-slate-800 truncate" title={metrics.bestParity}>{metrics.bestParity}</p>
+        {/* Card 1: Melhor Paridade */}
+        <div className="group relative bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm cursor-pointer hover:border-slate-300 transition-colors flex flex-col justify-between min-h-[125px]">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Melhor Paridade (&gt;50 vols)</p>
+            <p className="text-lg font-bold text-slate-800 truncate" title={metrics.bestParity}>{metrics.bestParity}</p>
+          </div>
+          <div className="mt-3">
+            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+              <span className="text-teal-600">{Math.round(metrics.bestParityMenPct)}% H</span>
+              <span className="text-purple-600">{Math.round(metrics.bestParityWomenPct)}% M</span>
+            </div>
+            <div className="h-1.5 w-full bg-slate-100 rounded-full flex overflow-hidden">
+              <div style={{ width: `${metrics.bestParityMenPct}%`, backgroundColor: COLORS.menLight }} className="h-full"></div>
+              <div style={{ width: `${metrics.bestParityWomenPct}%`, backgroundColor: COLORS.women }} className="h-full"></div>
+            </div>
+          </div>
+          
+          <div className="pointer-events-none absolute top-full left-1/2 z-20 mt-2 w-64 -translate-x-1/2 scale-95 rounded-lg bg-slate-800 p-3 text-xs text-slate-200 opacity-0 shadow-xl transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
+            Instituição (com &gt;50 bolsas) que apresenta a divisão mais equilibrada (próxima a 50%) entre homens e mulheres.
+            <div className="absolute bottom-full left-1/2 h-2 w-2 -translate-x-1/2 translate-y-1 rotate-45 bg-slate-800"></div>
+          </div>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Maior Fosso de Gênero</p>
-           <p className="text-xl font-bold text-slate-800 truncate" title={metrics.worstGap}>{metrics.worstGap}</p>
+
+        {/* Card 2: Maior Fosso de Gênero */}
+        <div className="group relative bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm cursor-pointer hover:border-slate-300 transition-colors flex flex-col justify-between min-h-[125px]">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Maior Fosso de Gênero</p>
+            <p className="text-lg font-bold text-slate-800 truncate" title={metrics.worstGap}>{metrics.worstGap}</p>
+          </div>
+          <div className="mt-3">
+            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+              <span className="text-teal-600">{Math.round(metrics.worstGapMenPct)}% H</span>
+              <span className="text-purple-600">{Math.round(metrics.worstGapWomenPct)}% M</span>
+            </div>
+            <div className="h-1.5 w-full bg-slate-100 rounded-full flex overflow-hidden">
+              <div style={{ width: `${metrics.worstGapMenPct}%`, backgroundColor: COLORS.menLight }} className="h-full"></div>
+              <div style={{ width: `${metrics.worstGapWomenPct}%`, backgroundColor: COLORS.women }} className="h-full"></div>
+            </div>
+          </div>
+          
+          <div className="pointer-events-none absolute top-full left-1/2 z-20 mt-2 w-64 -translate-x-1/2 scale-95 rounded-lg bg-slate-800 p-3 text-xs text-slate-200 opacity-0 shadow-xl transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
+            Instituição (com &gt;50 bolsas) que apresenta a maior disparidade proporcional entre os gneêros.
+            <div className="absolute bottom-full left-1/2 h-2 w-2 -translate-x-1/2 translate-y-1 rotate-45 bg-slate-800"></div>
+          </div>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Polo Geopolítico</p>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-slate-800">{metrics.topUf}</p>
-            <p className="text-lg text-slate-500">({metrics.topUfCount} bolsas)</p>
+
+        {/* Card 3: Polo Geopolítico */}
+        <div className="group relative bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm cursor-pointer hover:border-slate-300 transition-colors flex flex-col justify-between min-h-[125px]">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Polo Geopolítico</p>
+            <p className="text-lg font-bold text-slate-800 truncate" title={metrics.topUf}>{metrics.topUf}</p>
+          </div>
+          <div className="mt-3">
+            <p className="text-[10px] font-bold text-slate-500 mb-1">
+              {metrics.topUfCount.toLocaleString('pt-BR')} bolsas ativas
+            </p>
+            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 w-full"></div>
+            </div>
+          </div>
+          
+          <div className="pointer-events-none absolute top-full left-1/2 z-20 mt-2 w-64 -translate-x-1/2 scale-95 rounded-lg bg-slate-800 p-3 text-xs text-slate-200 opacity-0 shadow-xl transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
+            Estado da Federação (UF) que concentra o maior número total de bolsas de produtividade em pesquisa.
+            <div className="absolute bottom-full left-1/2 h-2 w-2 -translate-x-1/2 translate-y-1 rotate-45 bg-slate-800"></div>
           </div>
         </div>
       </div>
@@ -170,17 +234,25 @@ export function TabInstituicoes({ data }: { data: Researcher[] }) {
         <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm flex flex-col min-h-[500px] lg:col-span-1">
           <h3 className="text-base font-bold text-slate-800 mb-1">Concentração por UF</h3>
           <p className="text-sm text-slate-500 mb-6">A esmagadora dominância concentrada nos principais estados do país.</p>
-          <div className="flex-1 w-full">
+           <div className="flex-1 w-full min-h-[380px] mt-4">
              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart 
-                  cx="50%" cy="50%" innerRadius="20%" outerRadius="100%" data={radialUfData} startAngle={90} endAngle={-270}
-                >
-                  <RadialBar background dataKey="value" cornerRadius={10} />
-                  <Legend iconSize={10} layout="vertical" verticalAlign="bottom" wrapperStyle={{ fontSize: '10px' }} />
-                  <Tooltip contentStyle={{borderRadius: '8px'}} formatter={(val: number) => [`${val} bolsas`, 'Volume']} />
-                </RadialBarChart>
+               <BarChart data={radialUfData.slice(0, 10)} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                 <XAxis type="number" hide />
+                 <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 11, fontWeight: 'bold'}} />
+                 <Tooltip 
+                   cursor={{fill: '#f8fafc'}}
+                   contentStyle={{borderRadius: '8px'}}
+                   formatter={(val: number) => [`${val.toLocaleString('pt-BR')} bolsas`, 'Volume']}
+                 />
+                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                   {radialUfData.slice(0, 10).map((entry, index) => (
+                     <Cell key={`cell-${index}`} fill={entry.fill} />
+                   ))}
+                 </Bar>
+               </BarChart>
              </ResponsiveContainer>
-          </div>
+           </div>
         </div>
       </div>
 
